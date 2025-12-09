@@ -1,10 +1,9 @@
-import guess_the_number as gt
+from guess_the_number import GuessTheNumber
 
 
 def gtn():
-    random_number = 1
-    print(random_number)
-
+    g = GuessTheNumber(min_number=1, max_number=100)
+    g.game()
 
 if __name__ == '__main__':
     gtn()
