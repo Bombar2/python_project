@@ -1,4 +1,12 @@
+from enum import Enum
+
 from guess_the_number import GuessTheNumber
+
+class Purchases(Enum):
+    RestoreHealth = 1
+    AdditionalAttempt = 3
+    AdditionalHealth = 5
+    SaveTheGame = 10
 
 
 def game():
@@ -25,6 +33,8 @@ def game():
                 gtn.reload_attempt()
                 print(f"Угадал! Плюс бал! Сейчас на балансе {gtn.coin}")
 
+                making_purchases(gtn) #Покупки
+
             elif human_number != random_number:
                 if human_number > random_number:
                     print(f"Введённое число больше загаданного!")
@@ -50,53 +60,61 @@ def game():
             break
 
 
-
-
-
-if __name__ == '__main__':
-    game()
-
-
-def pocupci(gtn: GuessTheNumber):
+def making_purchases(gtn: GuessTheNumber):
+    """Реализация магазина"""
     while True:
 
         if gtn.coin == 0:
             break
 
         print("Покупки.")
-        if gtn.coin >= 1:
+        if gtn.coin >= Purchases.RestoreHealth.value:
             print("1. Восстановить здоровье на 1 - 1 бал")
-        if gtn.coin >= 5:
-            print("2. Купить дополнительную попытку для угадывания - 5 балов")
+        if gtn.coin >= Purchases.AdditionalAttempt.value:
+            print("2. Купить дополнительную попытку для угадывания - 3 балов")
+        if gtn.coin >= Purchases.AdditionalHealth.value:
             print("3. Купить дополнительное здоровье - 5 балов")
-        if gtn.coin >= 10:
+        if gtn.coin >= Purchases.SaveTheGame.value:
             print("4. Сохранить игру - 10 балов")
         print("Хотите совершить покупку?")
+
         answer = str(input("Введите для ответа Д/Н "))
         if answer.lower() == "н" or answer.lower() == "не" or answer.lower() == "нет":
             break
 
         while answer.lower() == "д" or answer.lower() == "да":
-            coin = int(input(f"Сейчас у вас {gtn.coin} бал(ов). "
-                             f"Введите количество балов, которое хотите потратить... "))
+            print(f"Сейчас у вас {gtn.coin} бал(ов).")
             answer_buy = int(input("Введите номер раздела, который вы хотите оплатить... "))
 
-            if coin > gtn.coin:
-                print("У вас нет такого количества балов. Попробуйте ввести количество балов снова.")
-            else:
-                match answer_buy:
-                    case 1:
+            match answer_buy:
+                case 1:
+                    if checking_values(gtn.coin, Purchases.RestoreHealth.value):
                         gtn.health = 1
-                        gtn.coin = -1
+                        gtn.coin = -Purchases.RestoreHealth.value
                         break
-                    case 2:
+                case 2:
+                    if checking_values(gtn.coin, Purchases.AdditionalAttempt.value):
                         gtn.attempt = 1
-                        gtn.coin = -5
+                        gtn.coin = -Purchases.AdditionalAttempt.value
                         break
-                    case 3:
+                case 3:
+                    if checking_values(gtn.coin, Purchases.AdditionalHealth.value):
                         gtn.health = None
-                        gtn.coin = -5
+                        gtn.coin = -Purchases.AdditionalHealth.value
                         break
-                    case 4:
-                        print("Функция ещё не добавлена! Ожидайте последующих обновлений!")
+                case 4:
+                    print("Функция ещё не добавлена! Ожидайте последующих обновлений!")
+                case _:
+                    print("Выбранный раздел не существует! Попробуйте выбрать другой для покупки!")
 
+
+def checking_values(all_coin: int, coin: int):
+    value = all_coin - coin
+
+    if value < 0:
+        print("У вас не достаточно балов, чтобы произвести покупку! Попробуйте выбрать другой раздел!")
+    return all_coin - coin >= 0
+
+
+if __name__ == '__main__':
+    game()
