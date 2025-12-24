@@ -41,7 +41,7 @@ class Purchase:
 
     CONFIG_LIST = {
         1: {
-            "name": "Восстановить здоровье на 1.",
+            "name": "Восстановить здоровье на единицу.",
             "cost": Purchases.RestoreHealth.value,
             "action": 1
         },
