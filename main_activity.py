@@ -1,14 +1,27 @@
 from tkinter import *
 from tkinter import ttk
 from game import Game, LaunchEnum, AnswerEnum
+from frames.top_menu_bar import TopMenuButtons
 
 
 class MainActivity:
     __MAIN_ACTIVITY_TITLE: str = "Gues the number"
     __MAIN_ACTIVITY_ICON_PATH: str = "res/search.png"
 
+
+
     def __init__(self):
         self.game = Game(launch_enum=LaunchEnum.LAUNCH_IN_ACTIVITY)
+
+
+        __TOP_MENU_BUTTONS_CALLBACKS = {
+            "new_game": self.click_button_menu_new_game,
+            "save_game": self.click_button_menu_save_game,
+            "download_game": self.click_button_menu_download_game,
+            "statistic_game": self.click_button_menu_statistic,
+            "style_game": self.click_button_menu_style
+        }
+
         self.human_number = ""
         self.number_label = None
         self.attempt_label = None
@@ -19,13 +32,17 @@ class MainActivity:
         self.shop_buttons = []
 
         root = Tk()
-        root.geometry("600x450")
+        root.geometry("600x500")
         root.resizable(False, False)
 
         root.title(self.__MAIN_ACTIVITY_TITLE)
 
         self.set_main_activity_icon(root, self.__MAIN_ACTIVITY_ICON_PATH) #Выставление иконки.
 
+
+        #self.create_top_menu(root)
+        """Создаю верхнее меню"""
+        self.TopMenuButtons = TopMenuButtons(root, __TOP_MENU_BUTTONS_CALLBACKS)
 
         main_frame = ttk.Frame(root, padding=10)
         main_frame.pack(fill="both", expand=True)
@@ -50,6 +67,28 @@ class MainActivity:
         if value not in "Enter" and len(self.human_number) < 4:
             self.human_number += value
             self.number_label.config(text=f"{self.human_number}")
+
+    def click_button_shop(self, index):
+        for idx, purchase in self.game.get_purchases_dict().items():
+            if idx == index:
+                purchase['action']()
+
+        self.update_status(AnswerEnum.ANSWER_SUCCESS)
+
+    def click_button_menu_new_game(self):
+        pass
+
+    def click_button_menu_save_game(self):
+        pass
+
+    def click_button_menu_download_game(self):
+        pass
+
+    def click_button_menu_statistic(self):
+        pass
+
+    def click_button_menu_style(self):
+        pass
 
     def enter(self):
         if len(self.human_number) > 0:
@@ -80,6 +119,26 @@ class MainActivity:
         except FileNotFoundError:
             print("Иконка не найдена!")
 
+    def create_top_menu(self, root):
+        top_menu_frame = ttk.Frame(root)
+        top_menu_frame.pack(side="top", fill="x")
+
+        ttk.Button(top_menu_frame, text="Новая игра"
+                   , command=self.click_button_menu_new_game).pack(side="left", padx=2, pady=2)
+
+        ttk.Button(top_menu_frame, text="Сохранить игру"
+                   , command=self.click_button_menu_save_game).pack(side="left", padx=2, pady=2)
+
+        ttk.Button(top_menu_frame, text="Загрузить игру"
+                   , command=self.click_button_menu_download_game).pack(side="left", padx=2, pady=2)
+
+        ttk.Button(top_menu_frame, text="Статистика"
+                   , command=self.click_button_menu_statistic).pack(side="left", padx=2, pady=2)
+
+        ttk.Button(top_menu_frame, text="Стили"
+                   , command=self.click_button_menu_style).pack(side="left", padx=2, pady=2)
+
+
     def create_status_frame(self, root_frame):
         status_frame = ttk.LabelFrame(root_frame, text="Статус игры", padding=15)
         status_frame.grid(column=0, row=0, sticky="nsew", padx=(0, 5), pady=(0, 5))
@@ -88,7 +147,7 @@ class MainActivity:
 
         ttk.Label(status_frame, text="Количество жизней:",
                   font=("Arial", 11)).grid(column=0, row=0, sticky="w", pady=5)
-        self.health_label = ttk.Label(status_frame, text=f"{(' ♥ ' * self.game.gtn.health).strip()}",
+        self.health_label = ttk.Label(status_frame, text=f"{('♥' * self.game.gtn.health)}",
                                       font=("Arial", 14),
                                       foreground="red")
         self.health_label.grid(column=1, row=0, sticky="w", padx=(10, 0), pady=5)
@@ -159,7 +218,7 @@ class MainActivity:
         ttk.Label(coins_frm, text="Баллы: ", font=("Arial", 11)).pack(side="left")
         self.coin_label = ttk.Label(coins_frm, text="0",
                                     font=("Arial", 11, "bold"),
-                                    foreground="gold")
+                                    foreground="red")
         self.coin_label.pack(side="left", padx=(5, 0))
 
         ttk.Separator(purchases_frame, orient="horizontal").pack(fill="x", pady=15)
@@ -178,7 +237,6 @@ class MainActivity:
         #ttk.Button(self.shop_frame, text="+3 попытки\n15 баллов",command=lambda: self.click("15")).grid(row=1, column=0, sticky="we", pady=2)
         #ttk.Button(self.shop_frame, text="Подсказка\n20 баллов",command=lambda: self.click("20")).grid(row=2, column=0, sticky="we", pady=2)
 
-
     def update_shop_buttons(self):
         """функция добавления и обновления кнопок в магазине"""
 
@@ -193,7 +251,7 @@ class MainActivity:
             if purchase['cost'] <= self.game.get_coin():
                 btn = ttk.Button(self.shop_frame, name=str(idx),
                                  text=f"{idx}. {purchase['name']} - {purchase['cost']} бал(ов).",
-                                 command=lambda: self.click(idx))
+                                 command=lambda current_idx=idx: self.click_button_shop(current_idx))
                 btn.grid(row=i, column=0, sticky="we", pady=2)
                 self.shop_buttons.append(btn)
 
@@ -201,11 +259,10 @@ class MainActivity:
         self.human_number = ""
         self.number_label.config(text=answer_enum.value)
         self.attempt_label.config(text=self.game.gtn.attempt)
-        self.health_label.config(text=f"{(' ♥ ' * self.game.gtn.health).strip()}")
+        self.health_label.config(text=f"{('♥' * self.game.gtn.health)}")
         self.coin_label.config(text=f"{self.game.gtn.coin}")
 
         self.update_shop_buttons()
-
 
     def __delete_shop_buttons(self):
         for btn in self.shop_buttons:
