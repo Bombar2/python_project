@@ -18,9 +18,34 @@ class Game:
         self.purchase = Purchase(self.gtn)
         self.launch_enum = launch_enum
         self.end_game = False
+        self.reset_hint = False
+        self._human_number = "0"
+
+    @property
+    def human_number(self):
+        return self._human_number
+
+    @human_number.setter
+    def human_number(self, value: str):
+        if self._human_number == "0":
+            self._human_number = value
+        elif len(self._human_number) < 4:
+            self._human_number += value
+
+    def human_number_reset(self):
+        self._human_number = "0"
+
 
     def get_coin(self):
         return self.gtn.coin
+
+    @property
+    def hint(self):
+        return self.reset_hint
+
+    @hint.setter
+    def hint(self, value):
+        self.reset_hint = value
 
     def get_purchases_dict(self):
         return  self.purchase.purchases_list
@@ -44,17 +69,21 @@ class Game:
             except ValueError:
                 print("Пожалуйста, введите целое число!")
 
+    def check_attempt(self):
+        if self.gtn.const_attempt == self.gtn.attempt:
+            return True
+        return False
+
     def check_user_guess(self, user_guess: int, target_number: int = None) -> bool:
         """Проверяет предположение пользователя и даёт подсказку"""
 
         if user_guess == (target_number if target_number is not None else self.gtn.random_number):
             return True
 
-        if (self.launch_enum == LaunchEnum.LAUNCH_IN_CONSOLE and
-                self.check_user_guess_more(user_guess, target_number)):
-            print("Ваше число больше загаданного!")
+        if self.check_user_guess_more(user_guess, target_number if target_number is not None else self.gtn.random_number):
+            print(f"Ваше число больше загаданного! {self.gtn.random_number}")
         else:
-            print("Ваше число меньше загазанного!")
+            print(f"Ваше число меньше загаданного! {self.gtn.random_number}")
 
         return False
 
@@ -67,6 +96,9 @@ class Game:
         self.gtn.coin = 1
         self.gtn.reload_attempt()
         print(f"Угадал! +1 бал! Баланс: {self.gtn.coin}")
+
+        if self.launch_enum == LaunchEnum.LAUNCH_IN_ACTIVITY:
+            pass
 
         if (self.launch_enum == LaunchEnum.LAUNCH_IN_CONSOLE and
                 self.gtn.coin > 0):
@@ -116,6 +148,7 @@ class Game:
                 else:
                     print("Пожалуйста, ответьте Д (Да) или Н (Нет)")
         else:
+            self.hint = True
             self.gtn.reload()
 
     def play_round(self):

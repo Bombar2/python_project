@@ -1,38 +1,105 @@
 from enum import Enum
-from functools import partial
+
+from frames.UI.ui import TextLocaleEnum, UIElementEnum
 
 from guess_the_number import GuessTheNumber
 
 
 class Purchases(Enum):
-    RestoreHealth = 1
     AdditionalAttempt = 3
-    AdditionalHealth = 5
+    RestoreHealth = 5
+    AdditionalHealth = 7
     SaveTheGame = 10
 
 
-def __restore_health(gtn: GuessTheNumber):
-    gtn.health = 1
-    gtn.coin = -Purchases.RestoreHealth.value
 
-def __by_attempt(gtn: GuessTheNumber):
+def restore_health(gtn: GuessTheNumber):
+    if gtn.health < gtn.const_health:
+        gtn.health = 1
+        gtn.coin = -Purchases.RestoreHealth.value
+
+def by_attempt(gtn: GuessTheNumber):
     gtn.attempt = 1
+    gtn.const_attempt = 1
     gtn.coin = -Purchases.AdditionalAttempt.value
 
-def __by_health(gtn: GuessTheNumber):
-    gtn.health = None
+def by_health(gtn: GuessTheNumber):
+    gtn.const_health = 1
     gtn.coin = -Purchases.AdditionalHealth.value
 
-def __save_game(gtn: GuessTheNumber):
+def save_game(gtn: GuessTheNumber):
     pass
 
 
 PURCHASES_ACTIONS = {
-        1: __restore_health,
-        2: __by_attempt,
-        3: __by_health,
-        4: __save_game
+        1: restore_health,
+        2: by_attempt,
+        3: by_health,
+        4: save_game
     }
+
+
+class PurchaseDict:
+    __TEXT_UI = {
+        UIElementEnum.PURCHASE_HEALTH.value: {
+            "locale": {
+                TextLocaleEnum.RUSSIAN: "Дополнительная попытка.",
+                TextLocaleEnum.ENGLISH: "Additional attempt."
+            },
+            "value": "3",
+            "action": by_attempt
+        },
+        UIElementEnum.PURCHASE_ATTEMPT.value: {
+            "locale": {
+                TextLocaleEnum.RUSSIAN: "Восстановить здоровье на единицу.",
+                TextLocaleEnum.ENGLISH: "Restore health by one."
+            },
+            "value": "5",
+            "action": restore_health
+        },
+        UIElementEnum.PURCHASE_HEALTH_CONST.value: {
+            "locale": {
+                TextLocaleEnum.RUSSIAN: "Дополнительное здоровье в начале игры.",
+                TextLocaleEnum.ENGLISH: "Extra health at the start of the game."
+            },
+            "value": "7",
+            "action": by_health
+        },
+        UIElementEnum.PURCHASE_SAVE_GAME.value: {
+            "locale": {
+                TextLocaleEnum.RUSSIAN: "Сохранить игру.",
+                TextLocaleEnum.ENGLISH: "Save the game."
+            },
+            "value": "10",
+            "action": save_game
+        }
+    }
+
+    def __init__(self, locale:TextLocaleEnum = None, default_locale=TextLocaleEnum.RUSSIAN):
+        self._default_locale = locale if locale is not None else default_locale
+
+    def get_text_locale(self, ui_element: UIElementEnum, locale:TextLocaleEnum = None) -> str:
+        if locale is None:
+            locale = self._default_locale
+
+        try:
+            element = self.__TEXT_UI[ui_element.value]
+            locales = element["locale"]
+
+            return locales.get(locale) or locales.get(self._default_locale)
+        except (KeyError, StopIteration):
+            return f"[{ui_element.value}]"
+
+    def get_ui_value(self, ui_element_id: UIElementEnum) -> str:
+        return self.__TEXT_UI.get(ui_element_id.value, {}).get("value", "")
+
+    def get_locale(self):
+        return self._default_locale
+
+    def run_action(self, ui_element: UIElementEnum, gtn: GuessTheNumber):
+        self.__TEXT_UI.get(ui_element.value, {}).get("action")(gtn)
+
+
 
 
 class Purchase:
